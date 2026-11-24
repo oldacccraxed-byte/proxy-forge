@@ -1,3 +1,35 @@
+
+name: Build Proxy Forge APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Gradle
+        run: |
+          wget https://services.gradle.org/distributions/gradle-8.9-bin.zip
+          unzip gradle-8.9-bin.zip
+          echo "$GITHUB_WORKSPACE/gradle-8.9/bin" >> $GITHUB_PATH
+
+      - name: Extract project
+        run: unzip ProxyForge2-AndroidStudio.zip -d source
+
       - name: Fix Java version
         run: |
           python3 - <<'PY'
@@ -16,37 +48,13 @@
           )
           p.write_text(s)
           PY
-name: Build Proxy Forge APK
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Install Gradle
-        run: |
-          wget https://services.gradle.org/distributions/gradle-8.9-bin.zip
-          unzip gradle-8.9-bin.zip
-          echo "$GITHUB_WORKSPACE/gradle-8.9/bin" >> $GITHUB_PATH
-
-      - name: Extract project
-        run: unzip ProxyForge2-AndroidStudio.zip -d source
 
       - name: Build APK
         run: cd source && gradle assembleDebug
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: proxy-forge-apk
           path: source/app/build/outputs/apk/debug/app-debug.apk
+          
